@@ -179,7 +179,6 @@ def _format_tool_result(tool: str, body: str) -> str:
 def session_brief(recent_hours: int = RECENT_READ_HOURS_DEFAULT) -> str:
     recent_hours = max(0, _as_int(recent_hours, RECENT_READ_HOURS_DEFAULT))
     recent_memories = db.get_recent_memories(hours=24, limit=6, min_importance=1)
-    interest_reviews = db.interest_review(limit=4, status="active", include_qa=False)
     letters = db.get_unread_letters(recent_hours=recent_hours)
     consumed = db.mark_letters_read() if letters else 0
     board = db.read_board_messages(
@@ -211,22 +210,6 @@ def session_brief(recent_hours: int = RECENT_READ_HOURS_DEFAULT) -> str:
         parts.append(f"letters ({consumed} consumed):")
         for row in letters[:8]:
             parts.append(f"  [{_ts(row.get('written_at') or row.get('created_at'))}] {_brief(row.get('content'), 120)}")
-    if interest_reviews:
-        parts.append(f"interest review ({len(interest_reviews)}):")
-        for item in interest_reviews:
-            row = item.get("interest") or {}
-            parts.append(f"  {row.get('id')} | {row.get('name')}")
-            reason = str(item.get("reason") or "").strip()
-            next_action = _brief(row.get("next_action"), 100)
-            detail_parts = []
-            if reason:
-                detail_parts.append(f"reason: {reason}")
-            if next_action:
-                detail_parts.append(f"next: {next_action}")
-            if detail_parts:
-                parts.append("  " + " | ".join(detail_parts))
-    else:
-        parts.append("interest review: (empty)")
     return "\n\n".join(parts)
 
 
